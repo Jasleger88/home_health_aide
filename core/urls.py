@@ -1,14 +1,14 @@
-# core/urls.py
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import ServiceViewSet, AboutMeViewSet, ContactViewSet, home
+# home_health_site/urls.py
 
-router = DefaultRouter()
-router.register(r'services', ServiceViewSet)
-router.register(r'about', AboutMeViewSet)
-router.register(r'contacts', ContactViewSet)
+from django.contrib import admin
+from django.urls import path, include
+from core.views import process_payment  # Import the process_payment function
+
+from django.contrib import admin
+from django.urls import path, include
 
 urlpatterns = [
-    path('', home),  # Home page at the root
-    path('api/', include(router.urls)),  # API routes prefixed with 'api/'
+    path('admin/', admin.site.urls),
+    path('api/', include('core.urls')),  # Ensure 'core.urls' is correct
+    path('checkout/', include('core.urls')),  # Check if this is necessary
 ]

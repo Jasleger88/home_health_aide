@@ -19,10 +19,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
 from django.urls import path
+from .views import process_payment
 
 urlpatterns = [
+    path('payment/', process_payment, name='process_payment'),  # Ensure this does not loop back
+    # Add other URL patterns here as needed
     path('admin/', admin.site.urls),
-    path('api/', include('core.urls')),
+    path('api/', include('core.urls')),  # Include core app URLs
+    path('checkout/', include('core.urls')),  # This should not create a loop
 ]
+
+

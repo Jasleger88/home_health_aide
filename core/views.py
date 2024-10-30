@@ -1,20 +1,33 @@
-# core/views.py
-from rest_framework import viewsets
-from .models import Service, AboutMe, Contact
-from .serializers import ServiceSerializer, AboutMeSerializer, ContactSerializer
-from django.http import HttpResponse
 
-def home(request):
-    return HttpResponse("Welcome to the Home Health Aide Website!")
 
-class ServiceViewSet(viewsets.ModelViewSet):
-    queryset = Service.objects.all()
-    serializer_class = ServiceSerializer
+import stripe
+from django.conf import settings
+from django.shortcuts import render, redirect
+from .forms import PaymentForm
+from .models import Payment
 
-class AboutMeViewSet(viewsets.ModelViewSet):
-    queryset = AboutMe.objects.all()
-    serializer_class = AboutMeSerializer
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
-class ContactViewSet(viewsets.ModelViewSet):
-    queryset = Contact.objects.all()
-    serializer_class = ContactSerializer
+def process_payment(request):
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            token = form.cleaned_data['stripeToken']
+            amount = form.cleaned_data['amount']
+
+            try:
+                charge = stripe.Charge.create(
+                    amount=int(amount * 100),  # amount in cents
+                    currency='usd',
+                    description='Payment description',
+                    source=token,
+                )
+                # Record successful payment in the database
+                Payment.objects.create(method='credit_card', amount=amount)
+                return redirect('payment_success')  # Define this view accordingly
+            except stripe.error.CardError:
+                return redirect('payment_error')  # Define this view accordingly
+
+    else:
+        form = PaymentForm()
+    return render(request, 'payments/checkout.html', {'form': form, 'stripe_key': settings.STRIPE_PUBLISHABLE_KEY})
